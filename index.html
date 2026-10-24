@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Agent 看板</title>
+<style>
+.viz-root{color-scheme:light;--surface-1:#fcfcfb;--surface-2:#f0efec;--line:#e2e1dc;--text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#7a7974;
+--series-1:#2a78d6;--track:#e7e6e1;--good:#0ca30c;--warning:#fab219;--serious:#ec835a;--neutral:#9a9993;--link:#1c5cab}
+@media (prefers-color-scheme: dark){.viz-root{color-scheme:dark;--surface-1:#1a1a19;--surface-2:#262624;--line:#383835;--text-primary:#ffffff;--text-secondary:#c3c2b7;--text-muted:#9a998f;
+--series-1:#3987e5;--track:#383835;--neutral:#8a8983;--link:#86b6ef}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-1);color:var(--text-primary);font:15px/1.5 -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px 14px calc(32px + env(safe-area-inset-bottom))}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h1{font-size:20px;margin:0} h2{font-size:15px;color:var(--text-secondary);margin:22px 0 8px;font-weight:600}
+.muted{color:var(--text-muted)} .small{font-size:12px}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.tile{display:block;text-decoration:none;color:inherit;background:var(--surface-2);border-radius:12px;padding:12px 14px;border-left:4px solid var(--neutral)}
+.tile.wait{border-left-color:var(--warning)} .tile.agent{border-left-color:var(--good)} .tile.q{border-left-color:var(--series-1)}
+.big{font-size:30px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums} .big small{font-size:14px;font-weight:500;color:var(--text-secondary)}
+.lbl{font-size:13px;color:var(--text-secondary)}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.actions a{text-align:center;padding:10px 4px;border-radius:10px;border:1px solid var(--line);color:var(--link);text-decoration:none;font-size:14px;font-weight:600}
+ul{list-style:none;margin:0;padding:0}
+.proj{padding:10px 2px;border-bottom:1px solid var(--line)}
+.head{display:flex;align-items:center;gap:8px}
+.pid{font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums;min-width:28px}
+.name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--text-secondary);white-space:nowrap}
+.chip i{font-style:normal}
+.meter{display:flex;align-items:center;gap:8px;margin:6px 0 0 36px}
+.bar{flex:1;height:8px;background:var(--track);border-radius:4px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--series-1);border-radius:0 4px 4px 0}
+.pct{font-size:12px;color:var(--text-secondary);min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
+.work{display:flex;flex-wrap:wrap;align-items:center;gap:6px 4px;background:var(--surface-2);border-radius:12px;padding:10px 14px}
+.work .cnt{font-weight:700;margin-right:12px}
+.charts{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:600px){.charts{grid-template-columns:1fr 1fr}}
+.chart{margin:0;background:var(--surface-2);border-radius:12px;padding:10px 12px}
+.chart figcaption{font-size:13px;color:var(--text-secondary);display:flex;justify-content:space-between}
+.chart figcaption b{color:var(--text-primary);font-variant-numeric:tabular-nums}
+.plot{position:relative} svg{width:100%;height:120px;display:block;touch-action:pan-y}
+.grid{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}
+.axis{fill:var(--text-muted);font-size:9px}
+.line{fill:none;stroke:var(--series-1);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.dot1{fill:var(--series-1)}
+.cross{stroke:var(--text-muted);stroke-width:1;stroke-dasharray:2 2;vector-effect:non-scaling-stroke}
+.hover{fill:var(--series-1);stroke:var(--surface-2);stroke-width:2}
+.hit{fill:transparent}
+.tip{position:absolute;top:0;transform:translateX(-50%);background:var(--text-primary);color:var(--surface-1);font-size:12px;padding:2px 8px;border-radius:6px;pointer-events:none;white-space:nowrap}
+details{margin-top:4px;font-size:12px;color:var(--text-secondary)} table{border-collapse:collapse;margin-top:4px} td,th{padding:1px 10px 1px 0;text-align:left}
+.warn{margin-top:12px;padding:10px 14px;border-radius:12px;border:2px solid var(--serious);font-size:13px}
+.warn ul{margin:4px 0 0;padding-left:18px;list-style:disc}
+.health{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-top:12px;padding:8px 14px;border-radius:12px;background:var(--surface-2);font-size:13px;color:var(--text-secondary)}
+.health .hb-warn{color:var(--serious);font-weight:600}
+footer{margin-top:24px;font-size:12px;color:var(--text-muted)}
+footer a{color:var(--link)}
+</style>
+</head>
+<body class="viz-root">
+<main>
+<header><h1>Agent 看板</h1><span class="muted small">更新 2026-10-25 07:41</span></header>
+
+
+<div class="health"><span>健康分數　Agent 94｜知識庫 100｜資歷庫 90</span><span class="hb">本機 1 天前回報</span></div>
+<div class="tiles"><a class="tile wait" href="https://github.com/birdiebir/personal-agent-mobile-sync/blob/main/Project.md"><div class="big">1<small>＋工作 2</small></div><div class="lbl">個專案等你</div></a><a class="tile q" href="https://github.com/birdiebir/personal-agent-mobile-sync/edit/main/Questions.md"><div class="big">0<small>／5</small></div><div class="lbl">必答沒答（10-24 出題）</div></a><a class="tile agent" href="https://github.com/birdiebir/personal-agent-mobile-sync/blob/main/Project.md"><div class="big">4</div><div class="lbl">個 Agent 可做</div></a><a class="tile n" href="https://github.com/birdiebir/personal-agent-mobile-sync/blob/main/Questions.md"><div class="big">53<small>＋KB 14</small></div><div class="lbl">題庫待答</div></a></div>
+
+<div class="actions">
+  <a href="https://github.com/birdiebir/personal-agent-mobile-sync/edit/main/Questions.md">✏️ 答題</a>
+  <a href="https://github.com/birdiebir/personal-agent-mobile-sync/edit/main/Task.md">✏️ 交辦</a>
+  <a href="https://github.com/birdiebir/personal-agent-mobile-sync/edit/main/Project.md">✏️ 寫想法</a>
+</div>
+
+<section>
+<h2>個人專案</h2>
+<ul><li class="proj wait"><div class="head"><span class="pid">P44</span><span class="name">Claude＋Codex 協作與額度接手</span><span class="chip wait"><i aria-hidden="true">🟡</i>等你</span></div><div class="meter"><div class="bar" role="img" aria-label="完成度 95%"><span style="width:95%"></span></div><div class="pct">95%</div></div></li><li class="proj agent"><div class="head"><span class="pid">P37</span><span class="name">Gmail 萃取試點</span><span class="chip agent"><i aria-hidden="true">🟢</i>Agent 可做</span></div><div class="meter"><div class="bar" role="img" aria-label="完成度 50%"><span style="width:50%"></span></div><div class="pct">50%</div></div></li><li class="proj agent"><div class="head"><span class="pid">P41</span><span class="name">名稱不公開</span><span class="chip agent"><i aria-hidden="true">🟢</i>Agent 可做</span></div><div class="meter"><div class="bar" role="img" aria-label="完成度 35%"><span style="width:35%"></span></div><div class="pct">35%</div></div></li><li class="proj agent"><div class="head"><span class="pid">P40</span><span class="name">重置週夜間批次（10/19～10/26）</span><span class="chip agent"><i aria-hidden="true">🟢</i>Agent 可做</span></div><div class="meter"><div class="bar" role="img" aria-label="完成度 10%"><span style="width:10%"></span></div><div class="pct">10%</div></div></li><li class="proj idea"><div class="head"><span class="pid">P45</span><span class="name">手機自然語言查 KB／DB</span><span class="chip idea"><i aria-hidden="true">💡</i>構想</span></div><div class="meter"><div class="bar" role="img" aria-label="完成度 0%"><span style="width:2%"></span></div><div class="pct">0%</div></div></li><li class="proj pause"><div class="head"><span class="pid">P32</span><span class="name">人生成就地圖（第一階段：旅遊地圖）</span><span class="chip pause"><i aria-hidden="true">⏸</i>暫停</span></div><div class="meter"><div class="bar" role="img" aria-label="完成度 85%"><span style="width:85%"></span></div><div class="pct">85%</div></div></li><li class="proj pause"><div class="head"><span class="pid">P16</span><span class="name">創業比賽（FIREver）</span><span class="chip pause"><i aria-hidden="true">⏸</i>暫停</span></div><div class="meter"><div class="bar" role="img" aria-label="完成度 55%"><span style="width:55%"></span></div><div class="pct">55%</div></div></li><li class="proj pause"><div class="head"><span class="pid">P25</span><span class="name">名稱不公開</span><span class="chip pause"><i aria-hidden="true">⏸</i>暫停</span></div><div class="meter"><div class="bar" role="img" aria-label="完成度 40%"><span style="width:40%"></span></div><div class="pct">40%</div></div></li><li class="proj pause"><div class="head"><span class="pid">P13</span><span class="name">Google 相簿增量歸檔＋夜間圖片 OCR</span><span class="chip pause"><i aria-hidden="true">⏸</i>暫停</span></div><div class="meter"><div class="bar" role="img" aria-label="完成度 20%"><span style="width:20%"></span></div><div class="pct">20%</div></div></li></ul>
+</section>
+
+<section>
+<h2>工作專案（4 件，細節只在 private repo）</h2>
+<div class="work"><span class="chip wait"><i aria-hidden="true">🟡</i>等你</span><span class="cnt">2</span><span class="chip agent"><i aria-hidden="true">🟢</i>Agent 可做</span><span class="cnt">1</span><span class="chip pause"><i aria-hidden="true">⏸</i>暫停</span><span class="cnt">1</span></div>
+</section>
+
+<section><h2>近 27 天趨勢</h2><div class="charts"><figure class="chart" id="t-wait">
+  <figcaption>等你的專案（含工作）<b>3 件</b></figcaption>
+  <div class="plot">
+    <svg viewBox="0 0 320 120" preserveAspectRatio="none" data-points='[{&quot;d&quot;: &quot;09-29&quot;, &quot;v&quot;: 10}, {&quot;d&quot;: &quot;09-30&quot;, &quot;v&quot;: 12}, {&quot;d&quot;: &quot;10-01&quot;, &quot;v&quot;: 13}, {&quot;d&quot;: &quot;10-02&quot;, &quot;v&quot;: 15}, {&quot;d&quot;: &quot;10-03&quot;, &quot;v&quot;: 15}, {&quot;d&quot;: &quot;10-04&quot;, &quot;v&quot;: 15}, {&quot;d&quot;: &quot;10-05&quot;, &quot;v&quot;: 15}, {&quot;d&quot;: &quot;10-06&quot;, &quot;v&quot;: 17}, {&quot;d&quot;: &quot;10-07&quot;, &quot;v&quot;: 17}, {&quot;d&quot;: &quot;10-08&quot;, &quot;v&quot;: 17}, {&quot;d&quot;: &quot;10-09&quot;, &quot;v&quot;: 17}, {&quot;d&quot;: &quot;10-10&quot;, &quot;v&quot;: 17}, {&quot;d&quot;: &quot;10-11&quot;, &quot;v&quot;: 18}, {&quot;d&quot;: &quot;10-12&quot;, &quot;v&quot;: 9}, {&quot;d&quot;: &quot;10-13&quot;, &quot;v&quot;: 4}, {&quot;d&quot;: &quot;10-14&quot;, &quot;v&quot;: 2}, {&quot;d&quot;: &quot;10-15&quot;, &quot;v&quot;: 3}, {&quot;d&quot;: &quot;10-16&quot;, &quot;v&quot;: 3}, {&quot;d&quot;: &quot;10-17&quot;, &quot;v&quot;: 3}, {&quot;d&quot;: &quot;10-18&quot;, &quot;v&quot;: 3}, {&quot;d&quot;: &quot;10-19&quot;, &quot;v&quot;: 4}, {&quot;d&quot;: &quot;10-20&quot;, &quot;v&quot;: 4}, {&quot;d&quot;: &quot;10-21&quot;, &quot;v&quot;: 5}, {&quot;d&quot;: &quot;10-22&quot;, &quot;v&quot;: 3}, {&quot;d&quot;: &quot;10-23&quot;, &quot;v&quot;: 3}, {&quot;d&quot;: &quot;10-24&quot;, &quot;v&quot;: 3}, {&quot;d&quot;: &quot;10-25&quot;, &quot;v&quot;: 3}]'
+         data-x0="28" data-x1="312" data-yt="10" data-yb="98" data-ymax="19.8" data-unit=" 件">
+      <line class="grid" x1="28" x2="312" y1="98.0" y2="98.0"/><text class="axis" x="24" y="101.0" text-anchor="end">0</text><line class="grid" x1="28" x2="312" y1="54.0" y2="54.0"/><text class="axis" x="24" y="57.0" text-anchor="end">10</text><line class="grid" x1="28" x2="312" y1="10.0" y2="10.0"/><text class="axis" x="24" y="13.0" text-anchor="end">20</text><text class="axis" x="28" y="114">09-29</text><text class="axis" x="312" y="114" text-anchor="end">10-25</text><polyline class="line" points="28.0,53.6 38.9,44.7 49.8,40.2 60.8,31.3 71.7,31.3 82.6,31.3 93.5,31.3 104.5,22.4 115.4,22.4 126.3,22.4 137.2,22.4 148.2,22.4 159.1,18.0 170.0,58.0 180.9,80.2 191.8,89.1 202.8,84.7 213.7,84.7 224.6,84.7 235.5,84.7 246.5,80.2 257.4,80.2 268.3,75.8 279.2,84.7 290.2,84.7 301.1,84.7 312.0,84.7"/>
+      <line class="cross" y1="10" y2="98" x1="-9" x2="-9"/>
+      <circle class="hover" r="4" cx="-9" cy="-9"/>
+      <rect class="hit" x="0" y="0" width="320" height="120"/>
+    </svg>
+    <div class="tip" hidden></div>
+  </div>
+  <details><summary>表格</summary><table><tr><th>日期</th><th>等你的專案（含工作）</th></tr><tr><td>09-29</td><td>10</td></tr><tr><td>09-30</td><td>12</td></tr><tr><td>10-01</td><td>13</td></tr><tr><td>10-02</td><td>15</td></tr><tr><td>10-03</td><td>15</td></tr><tr><td>10-04</td><td>15</td></tr><tr><td>10-05</td><td>15</td></tr><tr><td>10-06</td><td>17</td></tr><tr><td>10-07</td><td>17</td></tr><tr><td>10-08</td><td>17</td></tr><tr><td>10-09</td><td>17</td></tr><tr><td>10-10</td><td>17</td></tr><tr><td>10-11</td><td>18</td></tr><tr><td>10-12</td><td>9</td></tr><tr><td>10-13</td><td>4</td></tr><tr><td>10-14</td><td>2</td></tr><tr><td>10-15</td><td>3</td></tr><tr><td>10-16</td><td>3</td></tr><tr><td>10-17</td><td>3</td></tr><tr><td>10-18</td><td>3</td></tr><tr><td>10-19</td><td>4</td></tr><tr><td>10-20</td><td>4</td></tr><tr><td>10-21</td><td>5</td></tr><tr><td>10-22</td><td>3</td></tr><tr><td>10-23</td><td>3</td></tr><tr><td>10-24</td><td>3</td></tr><tr><td>10-25</td><td>3</td></tr></table></details>
+</figure><figure class="chart" id="t-bank">
+  <figcaption>題庫待答<b>53 題</b></figcaption>
+  <div class="plot">
+    <svg viewBox="0 0 320 120" preserveAspectRatio="none" data-points='[{&quot;d&quot;: &quot;09-29&quot;, &quot;v&quot;: null}, {&quot;d&quot;: &quot;09-30&quot;, &quot;v&quot;: null}, {&quot;d&quot;: &quot;10-01&quot;, &quot;v&quot;: 13}, {&quot;d&quot;: &quot;10-02&quot;, &quot;v&quot;: 11}, {&quot;d&quot;: &quot;10-03&quot;, &quot;v&quot;: 11}, {&quot;d&quot;: &quot;10-04&quot;, &quot;v&quot;: 11}, {&quot;d&quot;: &quot;10-05&quot;, &quot;v&quot;: 17}, {&quot;d&quot;: &quot;10-06&quot;, &quot;v&quot;: 9}, {&quot;d&quot;: &quot;10-07&quot;, &quot;v&quot;: 9}, {&quot;d&quot;: &quot;10-08&quot;, &quot;v&quot;: 9}, {&quot;d&quot;: &quot;10-09&quot;, &quot;v&quot;: 9}, {&quot;d&quot;: &quot;10-10&quot;, &quot;v&quot;: 9}, {&quot;d&quot;: &quot;10-11&quot;, &quot;v&quot;: 31}, {&quot;d&quot;: &quot;10-12&quot;, &quot;v&quot;: 31}, {&quot;d&quot;: &quot;10-13&quot;, &quot;v&quot;: 25}, {&quot;d&quot;: &quot;10-14&quot;, &quot;v&quot;: 23}, {&quot;d&quot;: &quot;10-15&quot;, &quot;v&quot;: 29}, {&quot;d&quot;: &quot;10-16&quot;, &quot;v&quot;: 44}, {&quot;d&quot;: &quot;10-17&quot;, &quot;v&quot;: 44}, {&quot;d&quot;: &quot;10-18&quot;, &quot;v&quot;: 44}, {&quot;d&quot;: &quot;10-19&quot;, &quot;v&quot;: 44}, {&quot;d&quot;: &quot;10-20&quot;, &quot;v&quot;: 32}, {&quot;d&quot;: &quot;10-21&quot;, &quot;v&quot;: 37}, {&quot;d&quot;: &quot;10-22&quot;, &quot;v&quot;: 56}, {&quot;d&quot;: &quot;10-23&quot;, &quot;v&quot;: 56}, {&quot;d&quot;: &quot;10-24&quot;, &quot;v&quot;: 53}, {&quot;d&quot;: &quot;10-25&quot;, &quot;v&quot;: 53}]'
+         data-x0="28" data-x1="312" data-yt="10" data-yb="98" data-ymax="61.6" data-unit=" 題">
+      <line class="grid" x1="28" x2="312" y1="98.0" y2="98.0"/><text class="axis" x="24" y="101.0" text-anchor="end">0</text><line class="grid" x1="28" x2="312" y1="54.0" y2="54.0"/><text class="axis" x="24" y="57.0" text-anchor="end">31</text><line class="grid" x1="28" x2="312" y1="10.0" y2="10.0"/><text class="axis" x="24" y="13.0" text-anchor="end">62</text><text class="axis" x="28" y="114">09-29</text><text class="axis" x="312" y="114" text-anchor="end">10-25</text><polyline class="line" points="49.8,79.4 60.8,82.3 71.7,82.3 82.6,82.3 93.5,73.7 104.5,85.1 115.4,85.1 126.3,85.1 137.2,85.1 148.2,85.1 159.1,53.7 170.0,53.7 180.9,62.3 191.8,65.1 202.8,56.6 213.7,35.1 224.6,35.1 235.5,35.1 246.5,35.1 257.4,52.3 268.3,45.1 279.2,18.0 290.2,18.0 301.1,22.3 312.0,22.3"/>
+      <line class="cross" y1="10" y2="98" x1="-9" x2="-9"/>
+      <circle class="hover" r="4" cx="-9" cy="-9"/>
+      <rect class="hit" x="0" y="0" width="320" height="120"/>
+    </svg>
+    <div class="tip" hidden></div>
+  </div>
+  <details><summary>表格</summary><table><tr><th>日期</th><th>題庫待答</th></tr><tr><td>10-01</td><td>13</td></tr><tr><td>10-02</td><td>11</td></tr><tr><td>10-03</td><td>11</td></tr><tr><td>10-04</td><td>11</td></tr><tr><td>10-05</td><td>17</td></tr><tr><td>10-06</td><td>9</td></tr><tr><td>10-07</td><td>9</td></tr><tr><td>10-08</td><td>9</td></tr><tr><td>10-09</td><td>9</td></tr><tr><td>10-10</td><td>9</td></tr><tr><td>10-11</td><td>31</td></tr><tr><td>10-12</td><td>31</td></tr><tr><td>10-13</td><td>25</td></tr><tr><td>10-14</td><td>23</td></tr><tr><td>10-15</td><td>29</td></tr><tr><td>10-16</td><td>44</td></tr><tr><td>10-17</td><td>44</td></tr><tr><td>10-18</td><td>44</td></tr><tr><td>10-19</td><td>44</td></tr><tr><td>10-20</td><td>32</td></tr><tr><td>10-21</td><td>37</td></tr><tr><td>10-22</td><td>56</td></tr><tr><td>10-23</td><td>56</td></tr><tr><td>10-24</td><td>53</td></tr><tr><td>10-25</td><td>53</td></tr></table></details>
+</figure></div></section>
+
+<footer>
+<p>Task.md 未完成 22 項（其中待確認 0）｜已結案 47 個專案｜總覽 2026-10-22｜今日必答 2026-10-24</p>
+<p>這頁是公開網址，只放燈號、完成度與題數；下一步、等你什麼、題目內容請看 <a href="https://github.com/birdiebir/personal-agent-mobile-sync/blob/main/Project.md">Project.md</a>（要登入 GitHub）。</p>
+</footer>
+</main>
+<script>
+document.querySelectorAll('.chart svg').forEach(function(svg){
+  var pts=JSON.parse(svg.dataset.points), x0=+svg.dataset.x0, x1=+svg.dataset.x1, yt=+svg.dataset.yt, yb=+svg.dataset.yb, ymax=+svg.dataset.ymax, unit=svg.dataset.unit;
+  var cross=svg.querySelector('.cross'), dot=svg.querySelector('.hover'), tip=svg.parentNode.querySelector('.tip');
+  function show(ev){
+    var r=svg.getBoundingClientRect(), vx=(ev.clientX-r.left)/r.width*320;
+    var i=Math.round((vx-x0)/(x1-x0)*(pts.length-1)); i=Math.max(0,Math.min(pts.length-1,i));
+    var p=pts[i], cx=x0+(x1-x0)*i/(pts.length-1);
+    cross.setAttribute('x1',cx); cross.setAttribute('x2',cx);
+    if(p.v===null){dot.setAttribute('cx',-9); tip.textContent=p.d+'：無資料';}
+    else{dot.setAttribute('cx',cx); dot.setAttribute('cy',yt+(yb-yt)*(1-p.v/ymax)); tip.textContent=p.d+'：'+p.v+unit;}
+    tip.hidden=false; tip.style.left=(cx/320*r.width)+'px';
+  }
+  function hide(){cross.setAttribute('x1',-9);cross.setAttribute('x2',-9);dot.setAttribute('cx',-9);tip.hidden=true;}
+  svg.addEventListener('pointermove',show); svg.addEventListener('pointerdown',show); svg.addEventListener('pointerleave',hide);
+});
+</script>
+</body>
+</html>
