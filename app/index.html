@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://api.github.com; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f4f6fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<title>Agent</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <button id="btn-back" class="btn small ghost" type="button" aria-label="返回上一個主要頁" hidden>‹ 返回</button>
+  <h1 id="title">首頁</h1>
+  <span id="updated" class="updated"></span>
+  <button id="btn-refresh" class="btn small ghost" type="button" aria-label="重新整理">⟳</button>
+  <button id="btn-more" class="btn small ghost" type="button" aria-label="更多">⋯</button>
+</header>
+<div id="ptr" class="ptr" hidden>下拉重新整理</div>
+<div id="banner" class="banner" hidden></div>
+<button id="update" class="banner update" type="button" hidden>有新版本，點這裡更新</button>
+<main id="view"></main>
+<button id="sendpill" class="sendpill" type="button" hidden aria-live="polite"></button>
+<div id="toast" class="toast" hidden></div>
+<nav class="tabs" id="tabs">
+  <button type="button" data-tab="home"><span class="ico">🏠</span><span class="lbl">首頁</span></button>
+  <button type="button" data-tab="record"><span class="ico">📔</span><span class="lbl">紀錄</span></button>
+  <button type="button" data-tab="chat" class="center"><span class="cico"></span><span class="lbl"></span></button>
+  <button type="button" data-tab="todo"><span class="ico">❓</span><span class="lbl">問題</span></button>
+  <button type="button" data-tab="tasks"><span class="ico">✅</span><span class="lbl">任務</span></button>
+</nav>
+<script type="module" src="app.js"></script>
+</body>
+</html>
