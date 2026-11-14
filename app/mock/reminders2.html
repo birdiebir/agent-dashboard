@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>提醒頁第二版（草圖）</title>
+<style>
+  :root { --bg:#f3f4f6; --card:#fff; --ink:#1f2328; --dim:#6b7078; --line:#e3e5e8; --red:#b4472f; --redbg:#fbeee9; --blue:#1864c4; --bluebg:#e7effa; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 system-ui,"Noto Sans TC",sans-serif; }
+  main { max-width:520px; margin:0 auto; padding:14px 12px 48px; }
+  h1 { font-size:19px; margin:2px 0; }
+  h2 { font-size:15px; margin:18px 0 6px; }
+  .note { color:var(--dim); font-size:13px; }
+  .must { background:var(--redbg); border:1px solid #efcfc4; border-radius:12px; padding:10px 12px; margin-top:10px; }
+  .must h2 { margin:0 0 6px; color:var(--red); }
+  .row { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 11px; margin:6px 0; display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+  .must .row { border-color:#efcfc4; }
+  .t { font-weight:600; }
+  .s { color:var(--dim); font-size:13px; }
+  .when { flex:0 0 auto; font-size:13px; color:var(--dim); text-align:right; }
+  .when.hot { color:var(--red); font-weight:600; }
+  .tag { display:inline-block; font-size:12px; padding:0 7px; border-radius:9px; background:#eceef1; color:var(--dim); margin-left:4px; font-weight:400; }
+  .tabs { display:flex; gap:6px; margin:14px 0 4px; }
+  .tabs button { flex:1; border:1px solid var(--line); background:var(--card); border-radius:9px; padding:7px 0; font:inherit; font-size:14px; color:var(--ink); }
+  .tabs button.on { background:var(--bluebg); border-color:#b8d0ee; color:var(--blue); font-weight:600; }
+  .pane[hidden] { display:none; }
+  .more { color:var(--blue); font-size:14px; padding:6px 2px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border-radius:10px; overflow:hidden; }
+  th, td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:13px; color:var(--dim); font-weight:600; }
+  tr:last-child td { border-bottom:none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>提醒頁第二版（草圖）</h1>
+  <p class="note">內容都是假資料，按鈕只有上面三個分頁能切換。還沒開工。</p>
+
+  <section class="must">
+    <h2>不能忘（3）</h2>
+    <div class="row"><div><div class="t">繳假的保費</div><div class="s">不做會失效</div></div><div class="when hot">已過 2 天</div></div>
+    <div class="row"><div><div class="t">交假的評核表<span class="tag">回電腦才能做</span></div><div class="s">主管要用</div></div><div class="when hot">還有 3 天</div></div>
+    <div class="row"><div><div class="t">取消假的訂閱</div><div class="s">到期會自動扣款</div></div><div class="when">還有 40 天</div></div>
+  </section>
+
+  <div class="tabs" role="tablist">
+    <button class="on" data-p="soon">近期 4</button>
+    <button data-p="period">定期 12</button>
+    <button data-p="other">不定期 8</button>
+  </div>
+
+  <div class="pane" id="soon">
+    <div class="row"><div class="t">今天回假的訊息</div><div class="when hot">今天</div></div>
+    <div class="row"><div class="t">看假的月報<span class="tag">只要看</span></div><div class="when">今天</div></div>
+    <div class="row"><div class="t">假的備份<span class="tag">回電腦才能做</span></div><div class="when">還有 5 天</div></div>
+    <div class="row"><div class="t">預約假的牙醫</div><div class="when">還有 12 天</div></div>
+  </div>
+
+  <div class="pane" id="period" hidden>
+    <h2>這期還沒做</h2>
+    <div class="row"><div><div class="t">假的月底結算</div><div class="s">每月月底</div></div><div class="when hot">這期還沒做</div></div>
+    <h2>之後</h2>
+    <div class="row"><div><div class="t">假的洗牙</div><div class="s">每半年</div></div><div class="when">下次 5 月</div></div>
+    <div class="row"><div><div class="t">假的證件檢查</div><div class="s">每年 1 月</div></div><div class="when">下次 1 月</div></div>
+    <div class="more">還有 9 項 ›</div>
+    <p class="note">Agent 自己會做的，只留一行：「8 項背景維護正常」。</p>
+  </div>
+
+  <div class="pane" id="other" hidden>
+    <div class="row"><div class="t">有空整理假的資料夾</div><div class="when">沒日期</div></div>
+    <div class="row"><div class="t">回家插假的硬碟<span class="tag">回電腦才能做</span></div><div class="when">在家</div></div>
+    <div class="row"><div><div class="t">假的事項</div><div class="s">12 月起才處理</div></div><div class="when">12 月</div></div>
+    <div class="more">還有 5 項 ›</div>
+    <div class="row" style="justify-content:center;color:var(--blue)">＋ 新增提醒</div>
+  </div>
+
+  <h2>跟你的想法比較</h2>
+  <table>
+    <tr><th>分法</th><th>好處</th><th>問題</th></tr>
+    <tr><td>只分定期、不定期</td><td>簡單，電腦手機一致</td><td>重要的事跟小事混在一起，還是會忘</td></tr>
+    <tr><td><b>加一區「不能忘」（建議）</b></td><td>重要的永遠在最上面，不會被淹沒</td><td>要有人判斷什麼算重要，Agent 先標，你再改</td></tr>
+  </table>
+</main>
+<script>
+  const bs = document.querySelectorAll('.tabs button');
+  bs.forEach((b) => b.addEventListener('click', () => {
+    bs.forEach((x) => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.pane').forEach((p) => { p.hidden = p.id !== b.dataset.p; });
+  }));
+</script>
+</body>
+</html>

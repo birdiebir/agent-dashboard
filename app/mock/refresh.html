@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>聊天自動刷新：現在與改善後（草圖）</title>
+<style>
+  :root { --bg:#f6f5f1; --card:#fff; --ink:#23262b; --dim:#6b7078; --line:#e3e1da; --bad:#b4472f; --ok:#2f7a57; --accent:#2c5f8a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.6 system-ui,"Noto Sans TC",sans-serif; }
+  main { max-width:640px; margin:0 auto; padding:16px 14px 48px; }
+  h1 { font-size:20px; margin:4px 0 2px; }
+  h2 { font-size:16px; margin:24px 0 8px; }
+  .note { color:var(--dim); font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:10px 0; }
+  .answer { border-left:4px solid var(--accent); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:13px; color:var(--dim); font-weight:600; }
+  tr:last-child td { border-bottom:none; }
+  .bad { color:var(--bad); font-weight:600; }
+  .ok { color:var(--ok); font-weight:600; }
+  ol.steps { list-style:none; margin:0; padding:0; }
+  ol.steps li { display:flex; gap:10px; padding:6px 0; border-bottom:1px dashed var(--line); }
+  ol.steps li:last-child { border-bottom:none; }
+  .t { flex:0 0 58px; color:var(--dim); font-variant-numeric:tabular-nums; font-size:13px; padding-top:1px; }
+  .phones { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .phone { background:#fafaf7; border:1px solid var(--line); border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:6px; min-height:210px; }
+  .phone b { font-size:13px; }
+  .bub { border-radius:12px; padding:6px 9px; font-size:13px; max-width:92%; }
+  .me { background:#dce9f4; align-self:flex-end; }
+  .ai { background:#eeece6; align-self:flex-start; }
+  .wait { border:1px dashed var(--dim); color:var(--dim); align-self:flex-start; }
+  .box { margin-top:auto; border:1px solid var(--line); border-radius:8px; padding:5px 8px; font-size:12px; color:var(--dim); background:#fff; }
+  .tag { display:inline-block; font-size:12px; padding:0 7px; border-radius:9px; background:#e9eef3; color:var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>聊天自動刷新：現在與改善後</h1>
+  <p class="note">草圖，畫面內容都是假資料。秒數分兩種：「量到」是電腦紀錄算出來的，「推算」還沒在手機實測。</p>
+
+  <div class="card answer">
+    <b>這是 PWA 的限制嗎？不是。</b><br>
+    App 在前景時，網頁一樣能即時收資料。只有在背景時 Chrome 會暫停頁面，回來要補抓。
+    你要手動刷新，主因是我們自己的程式，大部分只改手機就能解。
+  </div>
+
+  <h2>現在發生什麼事</h2>
+  <div class="card">
+    <ol class="steps">
+      <li><span class="t">0 秒</span><span>電腦把回覆存好。</span></li>
+      <li><span class="t">約 3～5 秒</span><span>推播送出，你看到通知（3 秒是量到的，推播本身是推算）。</span></li>
+      <li><span class="t">同一刻</span><span>手機馬上抓資料，<span class="bad">但資料還沒發佈，抓到舊的</span>。</span></li>
+      <li><span class="t">約 7 秒</span><span>資料才發佈（量到：中位數 7 秒，最慢 11 秒）。</span></li>
+      <li><span class="t">再 2～60 秒</span><span>等下一次定時查：聊天頁 2～5 秒，其他頁 60 秒。</span></li>
+      <li><span class="t">不定</span><span><span class="bad">輸入框有游標時畫面不更新</span>，要離開輸入框或按刷新才出現。</span></li>
+    </ol>
+  </div>
+
+  <h2>畫面對照</h2>
+  <div class="phones">
+    <div class="phone">
+      <b>現在</b>
+      <div class="bub me">幫我看一下這份</div>
+      <div class="note">（通知已經跳了，這裡還是空的）</div>
+      <div class="box">我想再補一句…｜游標在這裡</div>
+    </div>
+    <div class="phone">
+      <b>第一包之後</b>
+      <div class="bub me">幫我看一下這份</div>
+      <div class="bub wait">有新回覆，載入中…</div>
+      <div class="bub ai">看完了，有兩點要改。</div>
+      <div class="box">我想再補一句…｜繼續打字，鍵盤不收</div>
+    </div>
+  </div>
+
+  <h2>三包改法對照</h2>
+  <div class="card">
+    <table>
+      <tr><th>情況</th><th>現在</th><th>第一包<br>只動手機</th><th>加第二包<br>電腦改順序</th></tr>
+      <tr><td>在聊天頁，沒在打字</td><td>2～5 秒</td><td class="ok">1.5 秒內查到</td><td class="ok">更穩</td></tr>
+      <tr><td>在聊天頁，正在打字</td><td class="bad">不會出現</td><td class="ok">直接出現，鍵盤不收</td><td>相同</td></tr>
+      <tr><td>在首頁、看板</td><td class="bad">最久 60 秒</td><td class="ok">1.5 秒內查到</td><td>相同</td></tr>
+      <tr><td>點通知進來</td><td>再等 2～5 秒</td><td class="ok">一進來就查</td><td class="ok">幾乎不用等</td></tr>
+      <tr><td>通知到、內容未到</td><td class="bad">空的</td><td class="ok">顯示「載入中」</td><td class="ok">幾乎不會發生</td></tr>
+      <tr><td>要不要動通道</td><td>—</td><td class="ok">不動</td><td>要，你回電腦旁</td></tr>
+    </table>
+    <p class="note">第一包、第二包的效果都是推算。第一包會加上量測，上線後用真實秒數核對。</p>
+  </div>
+
+  <h2>更快、更像 Claude 的部分</h2>
+  <div class="card">
+    <table>
+      <tr><th>想要的</th><th>怎麼做</th><th>現在能做嗎</th></tr>
+      <tr><td>幾乎即時</td><td>手機也連雲端長連線</td><td>要等雲端通道，另寫規格</td></tr>
+      <tr><td>顯示在做什麼</td><td>「正在讀檔」「跑測試」這類步驟</td><td>可以，部分資料已有</td></tr>
+      <tr><td>一個字一個字出現</td><td>要改 Agent 的輸出方式</td><td class="bad">現在做不到，回覆是整段寫好才送；不建議現在做</td></tr>
+    </table>
+  </div>
+
+  <h2>建議</h2>
+  <div class="card">
+    <p><span class="tag">建議</span> 先開工第一包，放在五欄版後面，先做小改，「打字時也更新」動到畫面寫法，單獨查核。</p>
+    <p>推播裝完整回覆文字：先不做。第一包加第二包多半就夠。</p>
+    <p class="note">這份只是提案，線上程式和通道都沒動。</p>
+  </div>
+</main>
+</body>
+</html>
