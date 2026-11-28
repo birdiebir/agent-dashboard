@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>首頁看板草圖</title>
+<style>
+:root {
+  --bg: #f4f5f7; --card: #fff; --card2: #eef0f3; --line: #e3e6eb; --text: #15171c; --muted: #5b6270;
+  --accent: #1662c4; --accent-soft: #e7effb; --on-accent: #fff; --ok: #2a9d62; --ok-text: #1c7346;
+  --warn: #d97706; --warn-text: #9a4d00; --warn-soft: #fff1d6; --you: #e7effb; --r: 14px; --nav: 58px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1013; --card: #17191d; --card2: #1f2227; --line: #2a2e35; --text: #e8eaee; --muted: #9aa1ad;
+    --accent: #5aa9ff; --accent-soft: #1b2a3f; --on-accent: #07101d; --ok-text: #6fd19f; --warn-text: #f5b65c; --warn-soft: #33260f; --you: #1b2a3f; }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.45 -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; overscroll-behavior: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.app { max-width: 480px; margin: 0 auto; height: 100dvh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.note { background: var(--warn-soft); color: var(--warn-text); font-size: 12.5px; padding: 6px 12px; flex: none; }
+.screen { flex: 1; min-height: 0; display: none; flex-direction: column; }
+.screen.on { display: flex; }
+h1 { font-size: 19px; margin: 0; padding: 10px 14px 6px; flex: none; }
+
+/* 欄位分頁 */
+.tabs { display: flex; gap: 2px; padding: 0 8px; border-bottom: 1px solid var(--line); flex: none; }
+.tab { flex: 1; padding: 8px 0 9px; font-size: 13px; color: var(--muted); border-bottom: 2.5px solid transparent; white-space: nowrap; text-align: center; }
+.tab b { display: block; font-size: 16px; line-height: 1.15; font-weight: 650; }
+.tab.on { color: var(--accent); border-color: var(--accent); font-weight: 600; }
+.tab.me b { color: var(--warn-text); }
+
+/* 看板：左右滑，一次看一欄，露出下一欄的邊 */
+.board { flex: 1; min-height: 0; display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 10px 14px; scrollbar-width: none; }
+.board::-webkit-scrollbar { display: none; }
+.col { flex: 0 0 88%; scroll-snap-align: center; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+.empty { color: var(--muted); text-align: center; padding: 26px 0; font-size: 14px; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; flex: none; }
+.meta { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 3px; flex-wrap: wrap; }
+.kind { font-size: 11px; padding: 1px 6px; border-radius: 5px; background: var(--card2); }
+.kind.epic { background: var(--accent); color: var(--on-accent); }
+.title { font-weight: 600; }
+.sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.bar { height: 5px; background: var(--card2); border-radius: 3px; margin-top: 7px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.stop { color: var(--warn-text); font-weight: 600; }
+.pass { color: var(--ok-text); font-weight: 600; }
+.opts { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.opt { text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card2); font-size: 14px; }
+.opt.rec { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.row { display: flex; gap: 6px; margin-top: 8px; }
+.row .opt { flex: 1; text-align: center; }
+.link { color: var(--accent); font-size: 13px; margin-top: 6px; display: inline-block; }
+.group { font-size: 12px; color: var(--muted); padding: 4px 2px 0; }
+
+/* 底部：正在跑的專案 */
+.running { flex: none; border-top: 1px solid var(--line); padding: 7px 14px 8px; background: var(--card); }
+.running h2 { font-size: 12px; font-weight: 500; color: var(--muted); margin: 0 0 5px; }
+.pills { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.pill { flex: none; padding: 5px 10px; border-radius: 999px; background: var(--accent-soft); font-size: 13px; }
+.pill small { color: var(--muted); font-size: 12px; }
+
+/* 聊天 */
+.msgs { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.b { max-width: 88%; padding: 8px 11px; border-radius: 14px; font-size: 14.5px; }
+.b.me { align-self: flex-end; background: var(--you); }
+.b.ai { align-self: flex-start; background: var(--card); border: 1px solid var(--line); }
+.b .who { font-size: 12px; color: var(--muted); display: block; margin-bottom: 2px; }
+.stuck { font-size: 12.5px; color: var(--warn-text); margin-top: 5px; }
+.small { padding: 4px 9px; font-size: 13px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+.input { flex: none; display: flex; gap: 6px; align-items: center; padding: 8px 10px; border-top: 1px solid var(--line); background: var(--card); }
+.wk { width: 34px; height: 34px; flex: none; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; color: var(--muted); }
+.wk.on { background: var(--warn-soft); color: var(--warn-text); border-color: var(--warn); font-weight: 600; }
+.fake { flex: 1; height: 36px; border: 1px solid var(--line); border-radius: 18px; color: var(--muted); padding: 7px 13px; font-size: 14px; }
+.send { width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--accent); color: var(--on-accent); }
+
+nav { flex: none; height: var(--nav); display: flex; border-top: 1px solid var(--line); background: var(--card); padding-bottom: env(safe-area-inset-bottom); }
+nav button { flex: 1; font-size: 12px; color: var(--muted); position: relative; }
+nav button.on { color: var(--accent); font-weight: 600; }
+nav i { position: absolute; top: 8px; left: 56%; min-width: 16px; padding: 0 4px; border-radius: 8px; background: var(--warn); color: #fff; font: 600 11px/16px sans-serif; }
+.toast { position: absolute; left: 14px; right: 14px; bottom: calc(var(--nav) + 12px); background: var(--text); color: var(--bg); padding: 9px 12px; border-radius: 10px; font-size: 13.5px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 5; }
+.toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="note">這是草圖，內容都是假的，按鈕不會送出任何東西。左右滑動看五欄，底下可切到「嘿嘿」。</div>
+
+  <section class="screen on" id="s-home">
+    <h1>首頁</h1>
+    <div class="tabs" role="tablist" id="tabs">
+      <button class="tab" data-i="0"><b id="n0">2</b>待辦</button>
+      <button class="tab" data-i="1"><b id="n1">2</b>進行中</button>
+      <button class="tab me" data-i="2"><b id="n2">3</b>等我</button>
+      <button class="tab" data-i="3"><b id="n3">2</b>待驗收</button>
+      <button class="tab" data-i="4"><b id="n4">2</b>結案</button>
+    </div>
+
+    <div class="board" id="board">
+      <div class="col" id="c0">
+        <div class="card">
+          <div class="meta"><span class="kind">任務</span>P01 手機改版</div>
+          <div class="title">首頁加上額度小圖</div>
+          <div class="sub">你今早交辦，排在「看板」後面</div>
+        </div>
+        <div class="card">
+          <div class="meta"><span class="kind epic">專案</span>P02</div>
+          <div class="title">旅遊行程頁</div>
+          <div class="sub">還沒拆成任務，輪到時才拆</div>
+        </div>
+      </div>
+
+      <div class="col" id="c1">
+        <div class="card">
+          <div class="meta"><span class="kind">任務</span>P01 手機改版<span>·</span>執行員</div>
+          <div class="title">首頁改成看板</div>
+          <div class="sub">現在：跑測試（第 2／4 步）｜已 18 分，預計 09:30</div>
+          <div class="bar"><i style="width:50%"></i></div>
+        </div>
+        <div class="card">
+          <div class="meta"><span class="kind">任務</span>工作</div>
+          <div class="title">一件工作</div>
+          <div class="sub">細節在電腦｜已 6 分</div>
+        </div>
+      </div>
+
+      <div class="col" id="c2">
+        <div class="group">工作停住了，等你回答</div>
+        <div class="card" id="askcard">
+          <div class="meta"><span class="kind">任務</span>P01 手機改版</div>
+          <div class="title">看板打開時，要先停在哪一欄？</div>
+          <div class="sub"><span class="stop">停住了</span>｜不回的話：到 12:00 照 A 繼續</div>
+          <div class="opts">
+            <button class="opt rec" data-ans="A">A（建議）等我，有事先看到</button>
+            <button class="opt" data-ans="B">B 進行中，先看 Agent 在做什麼</button>
+          </div>
+        </div>
+        <div class="group">要你動手</div>
+        <div class="card">
+          <div class="meta"><span class="kind">任務</span>P05 備份</div>
+          <div class="title">回家把備份硬碟插上</div>
+          <div class="sub">只有你能做｜插上後自動開始</div>
+          <div class="row"><button class="opt" data-toast="假的：會標成「我做完了」">我做完了</button><button class="opt" data-toast="假的：會改提醒時間">晚點提醒</button></div>
+        </div>
+        <div class="group">沒擋到其他工作，但這件要你定</div>
+        <div class="card">
+          <div class="meta"><span class="kind epic">專案</span>P01</div>
+          <div class="title">要不要打開雲端通道？</div>
+          <div class="sub">收不回或影響方向的事，不會先做再告訴你｜週一回電腦旁再定也可以</div>
+          <div class="row"><button class="opt" data-toast="假的：會切到聊天室討論">去聊天室</button><button class="opt" data-toast="假的：會改提醒時間">晚點再說</button></div>
+        </div>
+      </div>
+      <div class="col" id="c3">
+        <div class="card">
+          <div class="meta"><span class="kind">任務</span>P01 手機改版</div>
+          <div class="title">五欄版面</div>
+          <div class="sub"><span class="pass">Agent 自測通過</span>｜測試 1237 項全過，真手機沒驗</div>
+          <div class="sub">想請你試一下（選做）：完全關掉 App 再開，切到新版</div>
+          <div class="row"><button class="opt" data-toast="假的：會移到結案">沒問題</button><button class="opt" data-toast="假的：會開聊天讓你說哪裡有問題">有問題</button></div>
+        </div>
+        <div class="card">
+          <div class="meta"><span class="kind">任務</span>P05 備份</div>
+          <div class="title">還原演練</div>
+          <div class="sub">Agent 自測中｜過了不用你試，會自己結案</div>
+          <div class="bar"><i style="width:70%"></i></div>
+        </div>
+      </div>
+
+      <div class="col" id="c4">
+        <div class="group">今天</div>
+        <div class="card">
+          <div class="meta"><span class="kind">任務</span>P01 手機改版<span>·</span>08:12</div>
+          <div class="title">手機留言修正</div>
+          <div class="sub">Agent 自測通過，不需要你試</div>
+        </div>
+        <div class="group">本週</div>
+        <div class="card">
+          <div class="meta"><span class="kind epic">專案</span>P03<span>·</span>11-05</div>
+          <div class="title">電腦效能檢查</div>
+          <div class="sub">整個專案結案｜共 6 件任務</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="running">
+      <h2>正在跑的專案</h2>
+      <div class="pills">
+        <button class="pill">P01 手機改版 <small>1 在跑・1 等你</small></button>
+        <button class="pill">P05 備份 <small>1 自測中</small></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-chat">
+    <h1>嘿嘿</h1>
+    <div class="msgs">
+      <div class="b me">首頁改成看板，左右滑，像 JIRA。</div>
+      <div class="b ai"><span class="who">嘿嘿</span>開始做了，卡片在「進行中」。</div>
+      <div class="b ai" id="chatask"><span class="who">嘿嘿｜工作停住，等你回答</span>
+        看板打開時，要先停在哪一欄？
+        <div class="opts">
+          <button class="opt rec" data-ans="A">A（建議）等我，有事先看到</button>
+          <button class="opt" data-ans="B">B 進行中，先看 Agent 在做什麼</button>
+        </div>
+        <div class="stuck">不回的話：到 12:00 照 A 繼續</div>
+      </div>
+      <div class="b me">這是標了工作的留言。
+        <div class="stuck">工作留言要等加密通道打開才能送，現在關著。</div>
+        <div class="row"><button class="small" data-toast="假的：會拿掉工作標記再送，內容會走一般通道">改成一般留言送出</button><button class="small" data-toast="假的：會刪除">刪除</button></div>
+      </div>
+    </div>
+    <div class="input">
+      <button class="wk" id="wk" aria-pressed="false" title="標記工作">工</button>
+      <div class="fake">輸入訊息</div>
+      <button class="send" aria-label="送出">↑</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s-other"><div class="empty" id="otherText" style="margin:auto"></div></section>
+
+  <div class="toast" id="toast"></div>
+  <nav id="nav">
+    <button class="on" data-s="home">首頁</button>
+    <button data-s="other" data-t="紀錄">紀錄</button>
+    <button data-s="chat">嘿嘿</button>
+    <button data-s="other" data-t="問答頁只放知識確認，讓 Agent 更懂你：知識庫、個人側寫、家人與資產。工程的問題不會出現在這裡。">問答<i>3</i></button>
+    <button data-s="other" data-t="通知">通知</button>
+  </nav>
+</div>
+<script>
+(function () {
+  var board = document.getElementById('board');
+  var tabs = [].slice.call(document.querySelectorAll('.tab'));
+  var cols = [].slice.call(document.querySelectorAll('.col'));
+  var toastEl = document.getElementById('toast'), timer = 0;
+  function toast(t) { toastEl.textContent = t; toastEl.classList.add('on'); clearTimeout(timer); timer = setTimeout(function () { toastEl.classList.remove('on'); }, 2400); }
+  function mark(i) { tabs.forEach(function (t, n) { t.classList.toggle('on', n === i); }); }
+  function go(i, smooth) { cols[i].scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', inline: 'center', block: 'nearest' }); mark(i); }
+  tabs.forEach(function (t, i) { t.onclick = function () { go(i, true); }; });
+  board.addEventListener('scroll', function () {
+    var mid = board.scrollLeft + board.clientWidth / 2, best = 0, bestD = 1e9;
+    cols.forEach(function (c, i) { var d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (d < bestD) { bestD = d; best = i; } });
+    mark(best);
+  }, { passive: true });
+  function show(s, text) {
+    ['home', 'chat', 'other'].forEach(function (k) { document.getElementById('s-' + k).classList.toggle('on', k === s); });
+    if (s === 'other') document.getElementById('otherText').textContent = text || '';
+    [].forEach.call(document.querySelectorAll('#nav button'), function (b) { b.classList.toggle('on', b.dataset.s === s && (s !== 'other' || b.dataset.t === text)); });
+    if (s === 'home') go(answered ? 1 : 2, false);
+  }
+  [].forEach.call(document.querySelectorAll('#nav button'), function (b) { b.onclick = function () { show(b.dataset.s, b.dataset.t); }; });
+    var answered = false;
+  [].forEach.call(document.querySelectorAll('[data-ans]'), function (b) {
+    b.onclick = function () {
+      if (answered) return;
+      answered = true;
+      var ask = document.getElementById('askcard');
+      var moved = document.createElement('div'); moved.className = 'card';
+      moved.innerHTML = '<div class="meta"><span class="kind">任務</span>P01 手機改版</div><div class="title">首頁改成看板</div><div class="sub">你選了 ' + b.dataset.ans + '，接著做</div>';
+      ask.parentNode.removeChild(ask.previousElementSibling); ask.parentNode.removeChild(ask);
+      cols[1].insertBefore(moved, cols[1].firstChild);
+      document.getElementById('n2').textContent = '2'; document.getElementById('n1').textContent = '3';
+      var c = document.getElementById('chatask');
+      c.innerHTML = '<span class="who">嘿嘿</span>看板打開時，要先停在哪一欄？<div class="pass" style="margin-top:5px">你選了 ' + b.dataset.ans + '，接著做。</div>';
+      toast('答完後，工作從「等我」回到「進行中」。電腦上的題目也會同步收掉。');
+    };
+  });
+  [].forEach.call(document.querySelectorAll('[data-toast]'), function (b) { b.onclick = function () { toast(b.dataset.toast); }; });
+  document.querySelector('.send').onclick = function () { toast('假的：草圖不會送出。'); };
+  var wk = document.getElementById('wk');
+  wk.onclick = function () { var on = wk.classList.toggle('on'); wk.setAttribute('aria-pressed', on); toast(on ? '這則會標成工作。原本的「工作」按鈕縮到這裡。' : '已取消工作標記。'); };
+  go(2, false);
+})();
+</script>
+</body>
+</html>
